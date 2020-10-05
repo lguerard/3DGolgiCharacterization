@@ -208,7 +208,7 @@ volMin  = 5
 filter_objects_touching_z = False
 
 # OMERO server info
-HOST = "omero.biozentrum.unibas.ch"
+HOST = "xxxx.xxxx.xxxx.xx"
 PORT = 4064
 datasetId = datasetid
 groupId = "-1"
