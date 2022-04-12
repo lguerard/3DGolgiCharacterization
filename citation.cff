@@ -3,7 +3,7 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: Guerard
     given-names: Laurent
-    orcid: https://orcid.org/0000-0002-5166-8524
+    orcid: "https://orcid.org/0000-0002-5166-8524"
 title: lguerard/3DGolgiCharacterization: Code for publication
 version: v1.1
 date-released: 2017-12-18
