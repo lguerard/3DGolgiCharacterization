@@ -22,6 +22,7 @@ Date (Y-M-D)    By        Comments
 #@ String(label="username", description="please enter your username") USERNAME
 #@ String(label="password", description="please enter your password", style="password") PASSWORD
 #@ Integer(label="Dataset ID", description="OMERO dataset you wish to process") datasetid
+#@ Float(label="Minimum volume to keep in micron", description="Volume below will get discarded", value=5) volMin
 #@ File(label="path to store results", style="directory", description="results of your script will be stored here") destination
 #@ OpService ops
 #@ UIService ui
@@ -46,7 +47,8 @@ from loci.plugins.in import ImporterOptions
 
 # 3DSuite imports
 from mcib3d.geom import Objects3DPopulation
-from mcib3d.image3d import ImageInt, ImageHandler, Segment3DImage
+from mcib3d.image3d import ImageInt, ImageHandler
+from mcib3d.image3d.segment import Segment3DImage
 from mcib3d.image3d.IterativeThresholding import TrackThreshold
 
 # Omero Dependencies
@@ -203,7 +205,7 @@ def BFExport(imp, savepath):
 # ─── VARIABLES ──────────────────────────────────────────────────
 
 # Minimum volume to be considered Golgi
-volMin  = 5
+# volMin  = 5
 # Filter objects touching in Z ?
 filter_objects_touching_z = False
 
@@ -234,7 +236,7 @@ for imageId in imageIds:
     
     out_full_path = origin_folder + os.sep + short_name
     
-    channel_of_interest = 2
+    channel_of_interest = 1
     
     imp_channel_of_interest = Duplicator().run(imp, channel_of_interest,
                                                channel_of_interest, 1, imp.getNSlices(), 1, 1)
@@ -245,14 +247,21 @@ for imageId in imageIds:
            "method=Otsu background=Dark black")
 
     imp_channel_of_interest.setCalibration(imp.getCalibration())
+    imp_channel_of_interest.show()
+    IJ.run("Morphological Filters (3D)", "operation=Closing element=Ball x-radius=3 y-radius=3 z-radius=2")
+    imp_channel_of_interest_closed = IJ.getImage()
+    imp_channel_of_interest.hide()
+    imp_channel_of_interest_closed.hide()
 
 
     IJ.log("3D segmentation...")
-    segment_3D  = Segment3DImage(imp_channel_of_interest, 0, 255)
+    segment_3D  = Segment3DImage(imp_channel_of_interest_closed, 1, 255)
     segment_3D.segment()
     stack_label = segment_3D.getLabelledObjectsStack()
     imp_label   = ImagePlus("3D Labelled", stack_label)
     imp_label.setCalibration(imp.getCalibration())
+    
+    imp_label.show()
     
     # wrap ImagePlus into 3D suite image format
     img  = ImageInt.wrap(imp_label)
@@ -262,7 +271,7 @@ for imageId in imageIds:
     # print nb
     unit = imp.getCalibration().getUnits()
     # print(unit)
-    # print(nb)
+    print(nb)
     IHimp2              = ImageHandler.wrap(imp)
     volume_list         = []
     # convex_volume_list  = []
@@ -338,6 +347,7 @@ for imageId in imageIds:
 
     IJ.log("Results for " + origin_name + " have been saved as " + outCSV)
     imp.close()
+    
 
 IJ.log("##############")
 IJ.log("MACRO FINISHED")
